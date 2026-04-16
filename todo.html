@@ -1,34 +1,94 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Todo List</title>
-    <style>
-        body {
-            background-color: white;
-        }
-        .task {
-            margin: 10px 0;
-        }
-    </style>
-</head>
-<body>
-    <h1>My Todo List</h1>
-    <div class="task">
-        <span>Task 1</span>
-        <button onclick="markAsDone(this)">Complete</button>
-    </div>
-    <div class="task">
-        <span>Task 2</span>
-        <button onclick="markAsDone(this)">Complete</button>
-    </div>
-    <script>
-        function markAsDone(button) {
-            const task = button.parentElement;
-            task.style.textDecoration = 'line-through';
-            button.disabled = true;
-        }
-    </script>
-</body>
-</html>
+<script>
+let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+function saveTasks() {
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+function renderTasks(filter = "all") {
+  let list = document.getElementById("taskList");
+  list.innerHTML = "";
+
+  tasks.forEach((task, index) => {
+    if (
+      (filter === "completed" && !task.done) ||
+      (filter === "pending" && task.done)
+    ) return;
+
+    let li = document.createElement("li");
+
+    let span = document.createElement("span");
+    span.innerText = task.text;
+    if (task.done) span.classList.add("done");
+
+    let btns = document.createElement("div");
+    btns.className = "buttons";
+
+    // ✅ COMPLETE BUTTON
+    let completeBtn = document.createElement("button");
+    completeBtn.innerText = task.done ? "Undo" : "Complete";
+    completeBtn.style.background = "#17a2b8";
+    completeBtn.style.color = "white";
+
+    completeBtn.onclick = () => {
+      task.done = !task.done;
+      saveTasks();
+      renderTasks(filter);
+    };
+
+    // ✏️ EDIT BUTTON
+    let editBtn = document.createElement("button");
+    editBtn.innerText = "Edit";
+    editBtn.className = "edit-btn";
+    editBtn.onclick = () => {
+      let newText = prompt("Edit task:", task.text);
+      if (newText) {
+        task.text = newText;
+        saveTasks();
+        renderTasks(filter);
+      }
+    };
+
+    // ❌ DELETE BUTTON
+    let delBtn = document.createElement("button");
+    delBtn.innerText = "Delete";
+    delBtn.className = "delete-btn";
+    delBtn.onclick = () => {
+      tasks.splice(index, 1);
+      saveTasks();
+      renderTasks(filter);
+    };
+
+    btns.appendChild(completeBtn);
+    btns.appendChild(editBtn);
+    btns.appendChild(delBtn);
+
+    li.appendChild(span);
+    li.appendChild(btns);
+    list.appendChild(li);
+  });
+}
+
+function addTask() {
+  let input = document.getElementById("taskInput");
+  let text = input.value.trim();
+  if (!text) return;
+
+  tasks.push({ text, done: false });
+  saveTasks();
+  renderTasks();
+  input.value = "";
+}
+
+function filterTasks(type) {
+  renderTasks(type);
+}
+
+function clearCompleted() {
+  tasks = tasks.filter(t => !t.done);
+  saveTasks();
+  renderTasks();
+}
+
+renderTasks();
+</script>
