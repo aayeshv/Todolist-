@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pro To-Do App</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: linear-gradient(135deg, #1d2b64, #f8cdda);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.container {
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  width: 350px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+h2 {
+  text-align: center;
+}
+
+.input-area {
+  display: flex;
+  gap: 10px;
+}
+
+input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.add-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.add-btn:hover {
+  background: #218838;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 15px;
+}
+
+li {
+  background: #f1f1f1;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.done {
+  text-decoration: line-through;
+  color: gray;
+}
+
+.buttons {
+  display: flex;
+  gap: 5px;
+}
+
+button {
+  border: none;
+  padding: 5px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.delete-btn { background: #dc3545; color: white; }
+.edit-btn { background: #ffc107; }
+.complete-btn { background: #17a2b8; color: white; }
+.filter-btn { background: #007bff; color: white; margin: 5px; }
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2>Pro To-Do App</h2>
+
+  <div class="input-area">
+    <input type="text" id="taskInput" placeholder="Enter task">
+    <button class="add-btn" onclick="addTask()">Add</button>
+  </div>
+
+  <div style="text-align:center;">
+    <button class="filter-btn" onclick="filterTasks('all')">All</button>
+    <button class="filter-btn" onclick="filterTasks('completed')">Completed</button>
+    <button class="filter-btn" onclick="filterTasks('pending')">Pending</button>
+  </div>
+
+  <ul id="taskList"></ul>
+
+  <button class="filter-btn" onclick="clearCompleted()">Clear Completed</button>
+</div>
+
+<script>
+let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+function saveTasks() {
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+function renderTasks(filter = "all") {
+  let list = document.getElementById("taskList");
+  list.innerHTML = "";
+
+  tasks.forEach((task, index) => {
+    if (
+      (filter === "completed" && !task.done) ||
+      (filter === "pending" && task.done)
+    ) return;
+
+    let li = document.createElement("li");
+
+    let span = document.createElement("span");
+    span.innerText = task.text;
+    if (task.done) span.classList.add("done");
+
+    let btns = document.createElement("div");
+    btns.className = "buttons";
+
+    let completeBtn = document.createElement("button");
+    completeBtn.innerText = task.done ? "Undo" : "Complete";
+    completeBtn.className = "complete-btn";
+    completeBtn.onclick = () => {
+      task.done = !task.done;
+      saveTasks();
+      renderTasks(filter);
+    };
+
+    let editBtn = document.createElement("button");
+    editBtn.innerText = "Edit";
+    editBtn.className = "edit-btn";
+    editBtn.onclick = () => {
+      let newText = prompt("Edit task:", task.text);
+      if (newText) {
+        task.text = newText;
+        saveTasks();
+        renderTasks(filter);
+      }
+    };
+
+    let delBtn = document.createElement("button");
+    delBtn.innerText = "Delete";
+    delBtn.className = "delete-btn";
+    delBtn.onclick = () => {
+      tasks.splice(index, 1);
+      saveTasks();
+      renderTasks(filter);
+    };
+
+    btns.appendChild(completeBtn);
+    btns.appendChild(editBtn);
+    btns.appendChild(delBtn);
+
+    li.appendChild(span);
+    li.appendChild(btns);
+    list.appendChild(li);
+  });
+}
+
+function addTask() {
+  let input = document.getElementById("taskInput");
+  let text = input.value.trim();
+  if (!text) return;
+
+  tasks.push({ text, done: false });
+  saveTasks();
+  renderTasks();
+  input.value = "";
+}
+
+function filterTasks(type) {
+  renderTasks(type);
+}
+
+function clearCompleted() {
+  tasks = tasks.filter(t => !t.done);
+  saveTasks();
+  renderTasks();
+}
+
+renderTasks();
+</script>
+
+</body>
+</html>
